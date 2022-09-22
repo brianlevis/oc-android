@@ -4,17 +4,37 @@ import {
   ImageBackground,
   View,
   TouchableOpacity,
-  Text,
   Share,
+  PanResponder,
+  Animated,
 } from "react-native";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import { captureRef } from "react-native-view-shot";
-import { EvilIcons, MaterialIcons } from "@expo/vector-icons";
+import { EvilIcons } from "@expo/vector-icons";
+import Draggable from "react-native-draggable";
 
 export default function DisplayPhotoView(props) {
   [hideButtons, setHideButtons] = useState(false);
   [imageUri, setImageUri] = useState("");
+
+  // For dragging
+  const pan = useRef(new Animated.ValueXY()).current;
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        pan.setOffset({
+          x: pan.x._value,
+          y: pan.y._value,
+        });
+      },
+      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }]),
+      onPanResponderRelease: () => {
+        pan.flattenOffset();
+      },
+    })
+  ).current;
 
   async function makeImageUri() {
     setHideButtons(true);
@@ -33,6 +53,7 @@ export default function DisplayPhotoView(props) {
       url: imageUri,
     });
   }
+
   return (
     <View>
       <ImageBackground
@@ -42,10 +63,18 @@ export default function DisplayPhotoView(props) {
           this.imageRef = ref;
         }}
       >
-        <Image
-          style={styles.smallImage}
-          source={{ uri: props.frontCameraImageUri }}
-        />
+        <Animated.View
+          style={{
+            ...styles.smallImageContainer,
+            transform: [{ translateX: pan.x }, { translateY: pan.y }],
+          }}
+          {...panResponder.panHandlers}
+        >
+          <Image
+            source={{ uri: props.frontCameraImageUri }}
+            style={styles.smallImage}
+          />
+        </Animated.View>
       </ImageBackground>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={sharePhoto}>
@@ -66,12 +95,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     zIndex: 0,
   },
-  smallImage: {
-    zIndex: 2,
+  smallImageContainer: {
     height: "30%",
     width: "40%",
     marginLeft: "5%",
     marginTop: "-120%",
+  },
+  smallImage: {
+    flex: 1,
+    borderWidth: "2px",
+    borderRadius: "25px",
     borderColor: "black",
     borderWidth: "2px",
     borderRadius: "25px",
