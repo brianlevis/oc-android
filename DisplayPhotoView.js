@@ -10,13 +10,14 @@ import {
 } from "react-native";
 import { useState, useRef } from "react";
 
+
 import { captureRef } from "react-native-view-shot";
 import { EvilIcons } from "@expo/vector-icons";
-import Draggable from "react-native-draggable";
 
 export default function DisplayPhotoView(props) {
   [hideButtons, setHideButtons] = useState(false);
   [imageUri, setImageUri] = useState("");
+
 
   // For dragging
   const pan = useRef(new Animated.ValueXY()).current;
@@ -35,6 +36,9 @@ export default function DisplayPhotoView(props) {
       },
     })
   ).current;
+
+
+
 
   async function makeImageUri() {
     setHideButtons(true);
@@ -63,18 +67,18 @@ export default function DisplayPhotoView(props) {
           this.imageRef = ref;
         }}
       >
-        <Animated.View
-          style={{
-            ...styles.smallImageContainer,
-            transform: [{ translateX: pan.x }, { translateY: pan.y }],
-          }}
-          {...panResponder.panHandlers}
-        >
-          <Image
-            source={{ uri: props.frontCameraImageUri }}
-            style={styles.smallImage}
-          />
-        </Animated.View>
+        {
+          props.frontCameraImageUri &&
+            <Animated.View
+              style={{...styles.smallImageContainer, transform: [{ translateX: pan.x }, { translateY: pan.y }]}}
+              {...panResponder.panHandlers}
+            >
+              <Image
+                source={{ uri: props.frontCameraImageUri }}
+                style={styles.smallImage}
+              />
+            </Animated.View>
+        }
       </ImageBackground>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={sharePhoto}>

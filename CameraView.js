@@ -1,11 +1,12 @@
-import { Camera, CameraType } from "expo-camera";
-import { useState, useEffect } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Camera, CameraType, requestCameraPermissionsAsync } from "expo-camera";
+import { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View, ImageBackground, ActivityIndicator } from "react-native";
 
 export default function CameraView(props) {
   const [type, setType] = useState(CameraType.back);
-  const [cameraPermission, setCameraPermission] = useState(null);
-  const [saveBackPhoto, setSaveBackPhoto] = useState(true);
+  const [cameraPermission, setCameraPermission] = Camera.useCameraPermissions();
+  const [tookBackPhoto, setTookBackPhoto] = useState(false);
+  const [backCameraImageUri, setBackCameraImageUri] = useState("");
 
   function toggleCameraType() {
     setType((current) =>
@@ -13,58 +14,74 @@ export default function CameraView(props) {
     );
   }
 
-  const permisionFunction = async () => {
-    // here is how you can get the camera permission
-    const cameraPermission = await Camera.requestCameraPermissionsAsync();
-
-    setCameraPermission(cameraPermission.status === "granted");
-
-    if (cameraPermission.status !== "granted") {
-      alert("Permission for media access needed.");
-    }
-  };
-
-  useEffect(() => {
-    permisionFunction();
-  }, []);
-
-  function onPictureSaved(photo) {
-    if (saveBackPhoto) {
+  function onPictureSaved(photo, backPhoto) {
+    if (backPhoto) {
+      setTookBackPhoto(true);
+      setBackCameraImageUri(photo.uri);
       props.onBackCameraPictureSaved(photo);
     } else {
       props.onFrontCameraPictureSaved(photo);
     }
-    setSaveBackPhoto(false);
-    toggleCameraType();
+  }
+
+  async function getCameraPermission() {
+    const cameraPermission = await requestCameraPermissionsAsync();
+    setCameraPermission(cameraPermission.granted);
   }
 
   function takePhoto() {
     if (this.camera) {
       this.camera.takePictureAsync({
-        onPictureSaved: onPictureSaved,
+        onPictureSaved: (photo) => onPictureSaved(photo, true),
       });
+      toggleCameraType();
+      setTimeout(
+        () => {
+          this.camera.takePictureAsync({
+            onPictureSaved: (photo) => onPictureSaved(photo, false),
+          })
+        }, 1000
+      )
     }
   }
 
   function getTakePhotoText() {
-    return `Take ${type === CameraType.back ? "back" : "front"} photo`;
+    return `Take photo`;
   }
 
   return (
     <View style={styles.container}>
-      <Camera
-        style={styles.camera}
-        type={type}
-        ref={(ref) => {
-          this.camera = ref;
-        }}
-      >
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={takePhoto}>
-            <Text style={styles.text}>{getTakePhotoText()}</Text>
-          </TouchableOpacity>
-        </View>
-      </Camera>
+      {cameraPermission && cameraPermission.granted ?
+        <Camera
+          style={styles.camera}
+          type={type}
+          ref={(ref) => {
+            this.camera = ref;
+          }}
+        >{
+            tookBackPhoto ?
+              <ImageBackground
+                source={{ uri: backCameraImageUri }}
+                style={styles.container}
+              >
+                <ActivityIndicator size="large" color="#ffffff" style={styles.loadingIndicator} />
+              </ImageBackground>
+              :
+
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.button} onPress={takePhoto}>
+                  <Text style={styles.text}>{getTakePhotoText()}</Text>
+                </TouchableOpacity>
+              </View>
+          }
+        </Camera>
+
+        : <TouchableOpacity style={styles.askPermissionButton} onPress={getCameraPermission} >
+            <Text>
+              Camera permission not granted, click here to grant permission
+            </Text>
+        </TouchableOpacity>
+      }
     </View>
   );
 }
@@ -92,5 +109,16 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "white",
+  },
+  loadingIndicator: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  askPermissionButton: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "black",
+    textAlign: "center",
+    justifyContent: "center",
   },
 });
