@@ -1,5 +1,5 @@
 {
-  "expo.ios.buildNumber": "1.0.5",
+  "expo.ios.buildNumber": "1.0.6",
   "expo": {
     "name": "onlycams",
     "slug": "onlycams",
@@ -17,7 +17,7 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "buildNumber": "1.0.5",
+      "buildNumber": "1.0.6",
       "supportsTablet": true,
       "bundleIdentifier": "abhishyant.onlycams.com",
       "infoPlist": {

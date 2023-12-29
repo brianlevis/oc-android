@@ -43,6 +43,7 @@ export default function DisplayPhotoView(props) {
   async function makeImageUri() {
     setHideButtons(true);
     resultUri = await captureRef(this.imageRef);
+    console.log(resultUri);
     setImageUri(resultUri);
   }
 

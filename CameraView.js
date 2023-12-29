@@ -1,5 +1,5 @@
 import { Camera, CameraType, requestCameraPermissionsAsync } from "expo-camera";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ImageBackground, ActivityIndicator } from "react-native";
 
 export default function CameraView(props) {
@@ -7,6 +7,8 @@ export default function CameraView(props) {
   const [cameraPermission, setCameraPermission] = Camera.useCameraPermissions();
   const [tookBackPhoto, setTookBackPhoto] = useState(false);
   const [backCameraImageUri, setBackCameraImageUri] = useState("");
+  const [cameraReady, setCameraReady] = useState(false);
+  const cameraRef = useRef(null);
 
   function toggleCameraType() {
     setType((current) =>
@@ -29,20 +31,26 @@ export default function CameraView(props) {
     setCameraPermission(cameraPermission.granted);
   }
 
-  function takePhoto() {
-    if (this.camera) {
-      this.camera.takePictureAsync({
-        onPictureSaved: (photo) => onPictureSaved(photo, true),
-      });
-      toggleCameraType();
-      setTimeout(
-        () => {
-          this.camera.takePictureAsync({
-            onPictureSaved: (photo) => onPictureSaved(photo, false),
-          })
-        }, 1000
-      )
+  async function takePhoto() {
+    if (!cameraReady) {
+      return;
     }
+    if (!cameraRef) {
+      return;
+    }
+
+    await cameraRef.current.takePictureAsync({
+      onPictureSaved: (photo) => onPictureSaved(photo, true),
+    });
+    toggleCameraType();
+    setTimeout(
+      async () => {
+        await cameraRef.current.takePictureAsync({
+          onPictureSaved: (photo) => onPictureSaved(photo, false),
+        })
+      }, 1000
+    )
+
   }
 
   function getTakePhotoText() {
@@ -52,12 +60,12 @@ export default function CameraView(props) {
   return (
     <View style={styles.container}>
       {cameraPermission && cameraPermission.granted ?
+
         <Camera
           style={styles.camera}
           type={type}
-          ref={(ref) => {
-            this.camera = ref;
-          }}
+          ref={cameraRef}
+          onCameraReady={() => setCameraReady(true)}
         >{
             tookBackPhoto ?
               <ImageBackground
@@ -67,19 +75,21 @@ export default function CameraView(props) {
                 <ActivityIndicator size="large" color="#ffffff" style={styles.loadingIndicator} />
               </ImageBackground>
               :
-
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={takePhoto}>
+                <TouchableOpacity style={styles.button} onPress={async () => { await takePhoto() }}>
                   <Text style={styles.text}>{getTakePhotoText()}</Text>
                 </TouchableOpacity>
               </View>
           }
         </Camera>
 
+
+
+
         : <TouchableOpacity style={styles.askPermissionButton} onPress={getCameraPermission} >
-            <Text>
-              Camera permission not granted, click here to grant permission
-            </Text>
+          <Text>
+            Camera permission not granted, click here to grant permission
+          </Text>
         </TouchableOpacity>
       }
     </View>
