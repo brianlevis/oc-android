@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@aptabase/react-native": "^0.3.9",
     "expo": "47",
     "expo-camera": "~13.1.0",
     "expo-media-library": "~15.0.0",

@@ -1,6 +1,8 @@
 import { Camera, CameraType, requestCameraPermissionsAsync } from "expo-camera";
 import { useState, useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ImageBackground, ActivityIndicator } from "react-native";
+import { trackEvent } from "@aptabase/react-native";
+
 
 export default function CameraView(props) {
   const [type, setType] = useState(CameraType.back);
@@ -9,6 +11,7 @@ export default function CameraView(props) {
   const [backCameraImageUri, setBackCameraImageUri] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const cameraRef = useRef(null);
+  const [takePhotoCount, setTakePhotoCount] = useState(0);
 
   function toggleCameraType() {
     setType((current) =>
@@ -38,6 +41,8 @@ export default function CameraView(props) {
     if (!cameraRef) {
       return;
     }
+    setTakePhotoCount(takePhotoCount + 1);
+    trackEvent("increment", { takePhotoCount });
 
     await cameraRef.current.takePictureAsync({
       onPictureSaved: (photo) => onPictureSaved(photo, true),

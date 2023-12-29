@@ -3,6 +3,9 @@ import CameraView from "./CameraView";
 import * as MediaLibrary from "expo-media-library";
 import DisplayPhotoView from "./DisplayPhotoView";
 import { Alert } from "react-native";
+import Aptabase from "@aptabase/react-native";
+
+Aptabase.init("A-US-9385020089");
 
 export default function App() {
   const [takenPhoto, setTakenPhoto] = useState(false);
