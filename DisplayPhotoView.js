@@ -5,37 +5,62 @@ import {
   View,
   TouchableOpacity,
   Share,
-  PanResponder,
-  Animated,
 } from "react-native";
-import { useState, useRef } from "react";
+import { useState } from "react";
+import { GestureHandlerRootView, GestureDetector, Gesture } from "react-native-gesture-handler";
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+
 
 
 import { captureRef } from "react-native-view-shot";
 import { EvilIcons } from "@expo/vector-icons";
 
 export default function DisplayPhotoView(props) {
-  [hideButtons, setHideButtons] = useState(false);
-  [imageUri, setImageUri] = useState("");
+  const [hideButtons, setHideButtons] = useState(false);
+  const [imageUri, setImageUri] = useState("");
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
 
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
-  // For dragging
-  const pan = useRef(new Animated.ValueXY()).current;
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        pan.setOffset({
-          x: pan.x._value,
-          y: pan.y._value,
-        });
-      },
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }]),
-      onPanResponderRelease: () => {
-        pan.flattenOffset();
-      },
+  const dragGesture = Gesture.Pan()
+    .onChange((event) => {
+      translateX.value += event.changeX;
+      translateY.value += event.changeY;
+    });
+
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((e) => {
+      scale.value = savedScale.value * e.scale;
     })
-  ).current;
+    .onEnd(() => {
+      savedScale.value = scale.value;
+    });
+
+  const composed = Gesture.Race(dragGesture, pinchGesture);
+
+
+
+
+
+  const containerStyle = useAnimatedStyle(() => {
+    return {
+      height: "30%",
+      width: "40%",
+      marginLeft: "5%",
+      marginTop: "-120%",
+      transform: [
+        {
+          translateX: translateX.value,
+        },
+        {
+          translateY: translateY.value,
+        },
+        { scale: scale.value }
+      ],
+    };
+  });
 
 
 
@@ -60,7 +85,7 @@ export default function DisplayPhotoView(props) {
   }
 
   return (
-    <View>
+    <GestureHandlerRootView>
       <ImageBackground
         style={styles.container}
         source={{ uri: props.backCameraImageUri }}
@@ -70,15 +95,16 @@ export default function DisplayPhotoView(props) {
       >
         {
           props.frontCameraImageUri &&
+          <GestureDetector gesture={composed}>
             <Animated.View
-              style={{...styles.smallImageContainer, transform: [{ translateX: pan.x }, { translateY: pan.y }]}}
-              {...panResponder.panHandlers}
+              style={containerStyle}
             >
               <Image
                 source={{ uri: props.frontCameraImageUri }}
                 style={styles.smallImage}
               />
             </Animated.View>
+          </GestureDetector>
         }
       </ImageBackground>
       <View style={styles.buttonContainer}>
@@ -89,7 +115,7 @@ export default function DisplayPhotoView(props) {
           <EvilIcons name="close" size={72} color="white" />
         </TouchableOpacity>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -99,12 +125,6 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
     zIndex: 0,
-  },
-  smallImageContainer: {
-    height: "30%",
-    width: "40%",
-    marginLeft: "5%",
-    marginTop: "-120%",
   },
   smallImage: {
     flex: 1,
