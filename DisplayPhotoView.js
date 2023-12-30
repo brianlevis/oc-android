@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { GestureHandlerRootView, GestureDetector, Gesture } from "react-native-gesture-handler";
-import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
+
 
 
 
@@ -16,6 +17,9 @@ import { captureRef } from "react-native-view-shot";
 import { EvilIcons } from "@expo/vector-icons";
 
 export default function DisplayPhotoView(props) {
+  const [frontCameraImageUri, setFrontCameraImageUri] = useState(props.frontCameraImageUri);
+  const [backCameraImageUri, setBackCameraImageUri] = useState(props.backCameraImageUri);
+  const [flipSmallPhoto, setFlipSmallPhoto] = useState(true);
   const [hideButtons, setHideButtons] = useState(false);
   const [imageUri, setImageUri] = useState("");
   const scale = useSharedValue(1);
@@ -38,7 +42,30 @@ export default function DisplayPhotoView(props) {
       savedScale.value = scale.value;
     });
 
-  const composed = Gesture.Race(dragGesture, pinchGesture);
+  const swapPhotos = () => {
+    const frontCameraImageUriTemp = frontCameraImageUri;
+    const backCameraImageUriTemp = backCameraImageUri;
+    setFrontCameraImageUri(backCameraImageUriTemp);
+    setBackCameraImageUri(frontCameraImageUriTemp);
+    setFlipSmallPhoto(!flipSmallPhoto);
+  }
+
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onStart(() => {
+      runOnJS(swapPhotos)();
+    });
+
+  const getFlipStyle = () => {
+    return {
+      transform: [
+        { scaleX: flipSmallPhoto ? -1 : 1 },
+      ],
+    };
+  }
+
+  const composed = Gesture.Race(dragGesture, pinchGesture, doubleTapGesture);
+
 
 
 
@@ -88,7 +115,7 @@ export default function DisplayPhotoView(props) {
     <GestureHandlerRootView>
       <ImageBackground
         style={styles.container}
-        source={{ uri: props.backCameraImageUri }}
+        source={{ uri: backCameraImageUri }}
         ref={(ref) => {
           this.imageRef = ref;
         }}
@@ -100,8 +127,8 @@ export default function DisplayPhotoView(props) {
               style={containerStyle}
             >
               <Image
-                source={{ uri: props.frontCameraImageUri }}
-                style={styles.smallImage}
+                source={{ uri: frontCameraImageUri }}
+                style={[styles.smallImage, getFlipStyle()]}
               />
             </Animated.View>
           </GestureDetector>
@@ -133,7 +160,6 @@ const styles = StyleSheet.create({
     borderColor: "black",
     borderWidth: "2px",
     borderRadius: "25px",
-    transform: [{ scaleX: -1 }],
   },
   buttonContainer: {
     flex: 1,

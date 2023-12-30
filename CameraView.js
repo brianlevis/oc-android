@@ -1,6 +1,6 @@
 import { Camera, CameraType, requestCameraPermissionsAsync } from "expo-camera";
 import { useState, useRef } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, ImageBackground, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, ImageBackground, ActivityIndicator, Button } from "react-native";
 import { trackEvent } from "@aptabase/react-native";
 
 
@@ -87,15 +87,16 @@ export default function CameraView(props) {
               </View>
           }
         </Camera>
-
-
-
-
-        : <TouchableOpacity style={styles.askPermissionButton} onPress={getCameraPermission} >
+        : <View style={styles.askPermissionButton}>
           <Text>
             Camera permission not granted, click here to grant permission
           </Text>
-        </TouchableOpacity>
+          <Button
+            onPress={getCameraPermission}
+            title="Grant permission"
+            color="#841584"
+          />
+        </View>
       }
     </View>
   );
@@ -129,9 +130,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
   },
-  askPermissionButton: {
+  askPermissionText: {
     fontSize: 24,
     fontWeight: "bold",
+    flex: 1,
     color: "black",
     textAlign: "center",
     justifyContent: "center",
