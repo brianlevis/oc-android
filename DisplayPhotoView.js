@@ -6,13 +6,9 @@ import {
   TouchableOpacity,
   Share,
 } from "react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { GestureHandlerRootView, GestureDetector, Gesture } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
-
-
-
-
 import { captureRef } from "react-native-view-shot";
 import { EvilIcons } from "@expo/vector-icons";
 
@@ -21,7 +17,7 @@ export default function DisplayPhotoView(props) {
   const [backCameraImageUri, setBackCameraImageUri] = useState(props.backCameraImageUri);
   const [flipSmallPhoto, setFlipSmallPhoto] = useState(true);
   const [hideButtons, setHideButtons] = useState(false);
-  const [imageUri, setImageUri] = useState("");
+  const imageUri = useRef("");
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
 
@@ -94,20 +90,13 @@ export default function DisplayPhotoView(props) {
 
   async function makeImageUri() {
     setHideButtons(true);
-    resultUri = await captureRef(this.imageRef);
-    console.log(resultUri);
-    setImageUri(resultUri);
-  }
-
-  async function savePhoto() {
-    await makeImageUri();
-    props.onSave(imageUri);
+    imageUri.current = await captureRef(this.imageRef);
   }
 
   async function sharePhoto() {
     await makeImageUri();
     await Share.share({
-      url: imageUri,
+      url: imageUri.current,
     });
   }
 

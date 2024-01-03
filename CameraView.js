@@ -1,7 +1,9 @@
 import { Camera, CameraType, requestCameraPermissionsAsync } from "expo-camera";
 import { useState, useRef } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, ImageBackground, ActivityIndicator, Button } from "react-native";
+import { StyleSheet, Text, View, ImageBackground, ActivityIndicator, Button, TouchableOpacity } from "react-native";
 import { trackEvent } from "@aptabase/react-native";
+import { EvilIcons } from "@expo/vector-icons";
+
 
 
 export default function CameraView(props) {
@@ -81,9 +83,8 @@ export default function CameraView(props) {
               </ImageBackground>
               :
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={async () => { await takePhoto() }}>
-                  <Text style={styles.text}>{getTakePhotoText()}</Text>
-                </TouchableOpacity>
+                <TouchableOpacity style={styles.lensButton} onPress={async () => { await takePhoto() }} />
+                <EvilIcons name="refresh" size={80} color="white" style={styles.switchCameraIcon} onPress={toggleCameraType} />
               </View>
           }
         </Camera>
@@ -114,11 +115,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     backgroundColor: "transparent",
-    margin: 64,
-  },
-  button: {
-    flex: 1,
-    alignSelf: "flex-end",
+    marginTop: "150%",
+    justifyContent: "center",
     alignItems: "center",
   },
   text: {
@@ -137,5 +135,16 @@ const styles = StyleSheet.create({
     color: "black",
     textAlign: "center",
     justifyContent: "center",
+  },
+  lensButton: {
+    borderRadius: "50%", /* Make it circular */
+    borderColor: "white",
+    borderWidth: 2,
+    width: 80, /* Set the width of the button */
+    height: 80, /* Set the height of the button */
+    marginLeft: "30%"
+  },
+  switchCameraIcon: {
+    marginLeft: "10%"
   },
 });
