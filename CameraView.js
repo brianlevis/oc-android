@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   lensButton: {
-    borderRadius: "50%", /* Make it circular */
+    borderRadius: 40, /* Make it circular */
     borderColor: "white",
     borderWidth: 2,
     width: 80, /* Set the width of the button */
