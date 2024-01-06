@@ -46,9 +46,9 @@ export default function CameraView(props) {
     setTakePhotoCount(takePhotoCount + 1);
     trackEvent("increment", { takePhotoCount });
 
-    await cameraRef.current.takePictureAsync({
-      onPictureSaved: (photo) => onPictureSaved(photo, true),
-    });
+    const photo = await cameraRef.current.takePictureAsync();
+    onPictureSaved(photo, true);
+
     toggleCameraType();
     setTimeout(
       async () => {
